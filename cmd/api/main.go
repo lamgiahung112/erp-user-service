@@ -15,8 +15,9 @@ import (
 )
 
 type Config struct {
-	DB     *sql.DB
-	Models data.Models
+	DB          *sql.DB
+	Models      *data.Models
+	RedisClient *data.RedisClient
 }
 
 const webPort = "80"
@@ -31,8 +32,9 @@ func main() {
 	log.Println("Connected to postgres")
 
 	app := Config{
-		DB:     db,
-		Models: data.New(db),
+		DB:          db,
+		Models:      data.New(db, os.Getenv("JWT_KEY")),
+		RedisClient: data.InitRedis(),
 	}
 
 	srv := &http.Server{
@@ -69,7 +71,8 @@ func connectDB() *sql.DB {
 	for {
 		connection, err := openDB(dsn)
 
-		if err != nil {
+		if err == nil {
+			initTable(connection)
 			return connection
 		}
 
@@ -79,5 +82,29 @@ func connectDB() *sql.DB {
 			return nil
 		}
 		time.Sleep(2 * time.Second)
+		continue
 	}
+}
+
+func initTable(db *sql.DB) error {
+	// Create a table based on the Users struct
+	createTableSQL := `CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        name TEXT,
+        password TEXT NOT NULL,
+        active BOOLEAN,
+        created_at TIMESTAMP NOT NULL,
+        updated_at TIMESTAMP NOT NULL
+    );`
+
+	// Execute the SQL statement
+	_, err := db.Exec(createTableSQL)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	fmt.Println("Table created successfully")
+	return nil
 }
