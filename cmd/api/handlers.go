@@ -3,6 +3,8 @@ package main
 import (
 	"erp-user-service/data"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
 type CreateUserRequestPayload struct {
@@ -70,7 +72,10 @@ func (app *Config) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jwt, err := user.GenerateJwt()
+	jwtClaims := user.GetClaims()
+	refreshToken := uuid.NewString()
+
+	jwt, err := app.Models.JwtUtilities.GenerateJwt(jwtClaims, refreshToken)
 
 	if err != nil {
 		app.errorJSON(w, err)
@@ -85,4 +90,10 @@ func (app *Config) Login(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 	app.writeJSON(w, http.StatusAccepted, &resp)
+}
+
+func (app *Config) Authenticate(w http.ResponseWriter, r *http.Request) {
+	// bearerToken := r.Header.Get("Authorization")
+	// token := bearerToken[7:len(bearerToken)]
+
 }
