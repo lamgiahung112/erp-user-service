@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"erp-user-service/data"
+	"erp-user-service/data/utils"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,9 +16,9 @@ import (
 )
 
 type Config struct {
-	DB          *sql.DB
-	Models      *data.Models
-	RedisClient *data.RedisClient
+	DB     *sql.DB
+	Models *data.Models
+	Utils  *utils.AppUtilities
 }
 
 const webPort = "80"
@@ -32,9 +33,9 @@ func main() {
 	log.Println("Connected to postgres")
 
 	app := Config{
-		DB:          db,
-		Models:      data.New(db, os.Getenv("JWT_KEY")),
-		RedisClient: data.InitRedis(),
+		DB:     db,
+		Models: data.New(db),
+		Utils:  utils.New(),
 	}
 
 	srv := &http.Server{

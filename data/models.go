@@ -10,9 +10,7 @@ import (
 )
 
 type Models struct {
-	Users        Users
-	RedisClient  *RedisClient
-	JwtUtilities *JwtUtilities
+	Users *Users
 }
 
 type Users struct {
@@ -28,22 +26,24 @@ type Users struct {
 const dbOpsTimeout = 3 * time.Second
 
 var db *sql.DB
-var redisClient = &RedisClient{}
-var jwtUtilities = &JwtUtilities{}
-var jwtKey []byte
-var jwtExpiration = time.Hour * 24 * 7 // 7 days
 
-func New(dbPool *sql.DB, envJwtKey string) *Models {
+func New(dbPool *sql.DB) *Models {
 	db = dbPool
-	jwtKey = []byte(envJwtKey)
+
 	return &Models{
-		Users:        Users{},
-		RedisClient:  redisClient,
-		JwtUtilities: jwtUtilities,
+		Users: &Users{},
 	}
 }
 
-func (*Users) Insert(user Users) (string, error) {
+func (user *Users) GetClaims() *map[string]any {
+	return &map[string]any{
+		"userID": user.ID,
+		"email":  user.Email,
+		"name":   user.Name,
+	}
+}
+
+func (*Users) Insert(user *Users) error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbOpsTimeout)
 
 	defer cancel()
@@ -51,10 +51,16 @@ func (*Users) Insert(user Users) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 12)
 
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	newId := uuid.New().String()
+
+	user.ID = newId
+	user.Active = true
+	user.Password = string(hashedPassword)
+	user.CreatedAt = time.Now()
+	user.UpdatedAt = time.Now()
 
 	statement := `insert into users (id,email,password,name,active,created_at,updated_at) 
 	values ($1,$2,$3,$4,$5,$6,$7) returning id`
@@ -62,20 +68,22 @@ func (*Users) Insert(user Users) (string, error) {
 	err = db.QueryRowContext(
 		ctx,
 		statement,
-		newId,
-		user.Email,
-		hashedPassword,
-		user.Name,
-		true,
-		time.Now(),
-		time.Now(),
-	).Scan(&newId)
+		&user.ID,
+		&user.Email,
+		&user.Password,
+		&user.Name,
+		&user.Active,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	).Scan(
+		&newId,
+	)
 
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return newId, nil
+	return nil
 }
 
 func (*Users) FindByEmail(email string) (*Users, error) {

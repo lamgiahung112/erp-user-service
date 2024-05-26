@@ -34,7 +34,7 @@ func (app *Config) CreateUser(w http.ResponseWriter, r *http.Request) {
 		Name:     requestPayload.Name,
 	}
 
-	id, err := app.Models.Users.Insert(newUser)
+	err = app.Models.Users.Insert(&newUser)
 
 	if err != nil {
 		app.errorJSON(w, err)
@@ -44,7 +44,7 @@ func (app *Config) CreateUser(w http.ResponseWriter, r *http.Request) {
 	jsonResp := jsonResponse{
 		Error:   false,
 		Message: "",
-		Data:    id,
+		Data:    &newUser,
 	}
 	app.writeJSON(w, http.StatusAccepted, &jsonResp)
 }
@@ -75,18 +75,36 @@ func (app *Config) Login(w http.ResponseWriter, r *http.Request) {
 	jwtClaims := user.GetClaims()
 	refreshToken := uuid.NewString()
 
-	jwt, err := app.Models.JwtUtilities.GenerateJwt(jwtClaims, refreshToken)
+	jwt, err := app.Utils.Jwt.GenerateJwt(jwtClaims, refreshToken)
 
 	if err != nil {
 		app.errorJSON(w, err)
 		return
 	}
 
+	iplocation, err := app.getClientDeviceInfo(r)
+
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+	userAgent := app.getUserAgent(r)
+	deviceInfo, err := app.Utils.DeviceInfo.GetDevice(userAgent, iplocation)
+
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	deviceInfo.LoginPortal = "Local"
+	app.Utils.Redis.StoreSessionInfo(user.ID, refreshToken, deviceInfo)
+
 	resp := jsonResponse{
 		Error:   false,
 		Message: "",
-		Data: map[string]string{
-			"token": jwt,
+		Data: map[string]any{
+			"token":      jwt,
+			"deviceInfo": deviceInfo,
 		},
 	}
 	app.writeJSON(w, http.StatusAccepted, &resp)
