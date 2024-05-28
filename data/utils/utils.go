@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"erp-user-service/factory"
 	"os"
 	"time"
 )
@@ -11,6 +12,8 @@ type AppUtilities struct {
 	Redis      *RedisClient
 	DeviceInfo *DeviceInfoUtilities
 }
+
+var ErrorFactory = &factory.ErrorFactory{}
 
 func New() *AppUtilities {
 	InitIpLocationUtils()

@@ -3,8 +3,10 @@ package data
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -23,6 +25,12 @@ type Users struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type JwtUsers struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
+	Name  string `json:"name"`
+}
+
 const dbOpsTimeout = 3 * time.Second
 
 var db *sql.DB
@@ -35,11 +43,27 @@ func New(dbPool *sql.DB) *Models {
 	}
 }
 
-func (user *Users) GetClaims() *map[string]any {
+func (user *Users) ToJwtUser() *JwtUsers {
+	return &JwtUsers{
+		ID:    user.ID,
+		Email: user.Email,
+		Name:  user.Name,
+	}
+}
+
+func (user *JwtUsers) GetClaims() *map[string]any {
 	return &map[string]any{
 		"userID": user.ID,
 		"email":  user.Email,
 		"name":   user.Name,
+	}
+}
+
+func (*Users) ParseFromClaims(claims *jwt.MapClaims) *JwtUsers {
+	return &JwtUsers{
+		ID:    fmt.Sprintf("%s", (*claims)["userID"]),
+		Email: fmt.Sprintf("%s", (*claims)["email"]),
+		Name:  fmt.Sprintf("%s", (*claims)["name"]),
 	}
 }
 

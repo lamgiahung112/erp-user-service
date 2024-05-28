@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -27,7 +26,7 @@ func (config *JwtUtilities) GenerateJwt(claimMap *map[string]any, refreshToken s
 	signedToken, err := token.SignedString(config.key)
 
 	if err != nil {
-		return "", err
+		return "", ErrorFactory.Unexpected()
 	}
 
 	return signedToken, nil
@@ -43,7 +42,7 @@ func (config *JwtUtilities) VerifyJwt(token string) (*jwt.MapClaims, error) {
 	claims, ok := parsedToken.Claims.(jwt.MapClaims)
 
 	if !ok || !parsedToken.Valid {
-		return nil, errors.New("invalid credentials")
+		return nil, ErrorFactory.InvalidCredentials()
 	}
 
 	return &claims, nil
@@ -51,7 +50,7 @@ func (config *JwtUtilities) VerifyJwt(token string) (*jwt.MapClaims, error) {
 
 func (config *JwtUtilities) defaultKeyFunc(t *jwt.Token) (interface{}, error) {
 	if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-		return nil, errors.New("unexpected signing method")
+		return nil, ErrorFactory.Malformatted("credentials")
 	}
 
 	return config.key, nil

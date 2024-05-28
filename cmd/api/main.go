@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"erp-user-service/data"
 	"erp-user-service/data/utils"
+	"erp-user-service/factory"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,9 +17,10 @@ import (
 )
 
 type Config struct {
-	DB     *sql.DB
-	Models *data.Models
-	Utils  *utils.AppUtilities
+	DB           *sql.DB
+	Models       *data.Models
+	Utils        *utils.AppUtilities
+	ErrorFactory *factory.ErrorFactory
 }
 
 const webPort = "80"
@@ -33,9 +35,10 @@ func main() {
 	log.Println("Connected to postgres")
 
 	app := Config{
-		DB:     db,
-		Models: data.New(db),
-		Utils:  utils.New(),
+		DB:           db,
+		Models:       data.New(db),
+		Utils:        utils.New(),
+		ErrorFactory: &factory.ErrorFactory{},
 	}
 
 	srv := &http.Server{

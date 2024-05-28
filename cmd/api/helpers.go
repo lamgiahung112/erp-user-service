@@ -29,7 +29,7 @@ func (app *Config) getUserAgent(r *http.Request) string {
 	return r.Header.Get("User-Agent")
 }
 
-func (app *Config) getClientDeviceInfo(r *http.Request) (*utils.IpLocationData, error) {
+func (app *Config) getClientIpLocation(r *http.Request) (*utils.IpLocationData, error) {
 	return app.Utils.IpLocation.GetLocationDatafromIP(app.ReadUserIP(r))
 }
 

@@ -24,6 +24,7 @@ func (app *Config) routes() http.Handler {
 
 	mux.Post("/", app.CreateUser)
 	mux.Post("/login", app.Login)
+	mux.Get("/verify", app.Verify)
 
 	return mux
 }

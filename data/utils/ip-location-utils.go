@@ -32,7 +32,7 @@ func (*IpLocationUtils) GetLocationDatafromIP(ip string) (*IpLocationData, error
 	result, err := db.Get_all(ip)
 
 	if err != nil {
-		return nil, err
+		return nil, ErrorFactory.Unexpected()
 	}
 
 	return &IpLocationData{

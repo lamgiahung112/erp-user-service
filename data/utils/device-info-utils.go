@@ -22,6 +22,14 @@ type DeviceInfo struct {
 type DeviceInfoUtilities struct {
 }
 
+func (d1 *DeviceInfo) Compare(d2 *DeviceInfo) bool {
+	isDiffBrowser := d1.Browser != d2.Browser
+	isDiffModel := d1.Model != d2.Model
+	isDiffOs := d1.OS != d2.OS
+
+	return isDiffBrowser || isDiffModel || isDiffOs
+}
+
 func (u *DeviceInfoUtilities) GetDevice(userAgent string, iplocation *IpLocationData) (*DeviceInfo, error) {
 	result := useragent.New(userAgent)
 	browser, _ := result.Browser()

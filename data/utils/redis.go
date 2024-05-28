@@ -30,7 +30,10 @@ func (*RedisClient) StoreSessionInfo(userID string, refreshToken string, deviceI
 
 	cmd := rdb.HSet(ctx, userID, refreshToken, deviceInfoJson)
 
-	return cmd.Err()
+	if cmd.Err() != nil {
+		return ErrorFactory.StoreSessionFailed()
+	}
+	return nil
 }
 
 func (*RedisClient) GetSessionInfo(userId string, refreshToken string) (*DeviceInfo, error) {
@@ -39,7 +42,7 @@ func (*RedisClient) GetSessionInfo(userId string, refreshToken string) (*DeviceI
 	getCmd := rdb.HGet(ctx, userId, refreshToken)
 
 	if getCmd.Err() != nil {
-		return nil, getCmd.Err()
+		return nil, ErrorFactory.NotFound("session data")
 	}
 
 	var deviceInfo DeviceInfo
@@ -47,18 +50,18 @@ func (*RedisClient) GetSessionInfo(userId string, refreshToken string) (*DeviceI
 	err := json.Unmarshal([]byte(getCmd.Val()), &deviceInfo)
 
 	if err != nil {
-		return nil, err
+		return nil, ErrorFactory.Malformatted("session data")
 	}
 
 	return &deviceInfo, nil
 }
 
-func (*RedisClient) RemoveRefreshToken(userID string) error {
+func (*RedisClient) RemoveRefreshToken(userID string, refreshToken string) error {
 	var ctx = context.Background()
-	err := rdb.Del(ctx, userID).Err()
+	err := rdb.HDel(ctx, userID, refreshToken).Err()
 
 	if err != nil {
-		return err
+		return ErrorFactory.Unexpected()
 	}
 	return nil
 }
