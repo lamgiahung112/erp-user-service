@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"erp-user-service/data"
+	"erp-user-service/data/utils"
 	"erp-user-service/grpc/authenticate"
 	"erp-user-service/grpc/logger"
 	"fmt"
@@ -17,17 +18,28 @@ import (
 type UserServer struct {
 	authenticate.UnimplementedAuthenticateServiceServer
 
-	Models *data.Models
+	JwtUtils *utils.JwtUtilities
+	Models   *data.Models
 }
 
-func (*UserServer) Authenticate(ctx context.Context, req *authenticate.AuthenticateRequest) (*authenticate.AuthenticateResponse, error) {
-	// input := req.GetToken()
+func (server *UserServer) Authenticate(ctx context.Context, req *authenticate.AuthenticateRequest) (*authenticate.AuthenticateResponse, error) {
+	token := req.GetToken()
+
+	claims, err := server.JwtUtils.VerifyJwt(token)
+
+	if err != nil {
+		return &authenticate.AuthenticateResponse{
+			User: nil,
+		}, err
+	}
+
+	user := server.Models.Users.ParseFromClaims(claims)
 
 	return &authenticate.AuthenticateResponse{
 		User: &authenticate.JwtUser{
-			UserId: "ok",
-			Email:  "email@ok",
-			Name:   "Hung",
+			UserId: user.ID,
+			Email:  user.Email,
+			Name:   user.Name,
 		},
 	}, nil
 }
@@ -42,7 +54,8 @@ func (app *Config) startGRPC() {
 	s := grpc.NewServer()
 
 	authenticate.RegisterAuthenticateServiceServer(s, &UserServer{
-		Models: app.Models,
+		Models:   app.Models,
+		JwtUtils: app.Utils.Jwt,
 	})
 
 	log.Printf("grpc server started on port %s", grpcPort)
