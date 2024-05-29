@@ -23,7 +23,10 @@ type Config struct {
 	ErrorFactory *factory.ErrorFactory
 }
 
-const webPort = "80"
+const (
+	grpcPort = "50001"
+	webPort  = "80"
+)
 
 func main() {
 	db := connectDB()
@@ -40,6 +43,8 @@ func main() {
 		Utils:        utils.New(),
 		ErrorFactory: &factory.ErrorFactory{},
 	}
+
+	go app.startGRPC()
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", webPort),

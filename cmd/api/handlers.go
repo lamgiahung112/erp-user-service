@@ -188,3 +188,8 @@ func (app *Config) Verify(w http.ResponseWriter, r *http.Request) {
 
 	app.writeJSON(w, http.StatusAccepted, &resp)
 }
+
+func (app *Config) TestGRPC(w http.ResponseWriter, r *http.Request) {
+	go app.LogViaGRPC("Test grpc", "Testing very carefully...")
+	app.writeJSON(w, http.StatusAccepted, map[string]any{})
+}

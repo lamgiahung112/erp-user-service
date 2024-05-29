@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package logger;
+
+option go_package = "/logger";
+
+message LogRequest{
+    string event = 1;
+    string callerService = 2;
+    int64 timestamp = 3;
+    string details = 4;
+}
+
+message LogResponse{
+    bool writeSuccess = 1;
+}
+
+service LoggerService{
+    rpc WriteLog(LogRequest) returns (LogResponse);
+}
