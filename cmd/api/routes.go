@@ -3,8 +3,8 @@ package main
 import (
 	"net/http"
 
+	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 )
 
@@ -19,13 +19,19 @@ func (app *Config) routes() http.Handler {
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
-
 	mux.Use(middleware.Heartbeat("/ping"))
+	mux.Use(app.Middleware.GetIpLocation)
 
-	mux.Post("/", app.CreateUser)
-	mux.Post("/login", app.Login)
-	mux.Get("/verify", app.Verify)
-	mux.Get("/test", app.TestGRPC)
+	mux.Post("/", app.Handlers.CreateUser)
+	mux.Post("/login", app.Handlers.Login)
+
+	protectedRoutes := chi.NewRouter()
+	protectedRoutes.Use(app.Middleware.Authenticated)
+	protectedRoutes.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("OK"))
+	})
+
+	mux.Mount("/authentication", protectedRoutes)
 
 	return mux
 }

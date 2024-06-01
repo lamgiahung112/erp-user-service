@@ -3,6 +3,6 @@ FROM alpine:latest
 RUN mkdir /app
 
 COPY userServiceApp /app
-COPY ./utils/ /app/
+COPY ./external/ /app/
 
 CMD ["/app/userServiceApp"]

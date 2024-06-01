@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"erp-user-service/data"
-	"erp-user-service/data/utils"
 	"erp-user-service/grpc/authenticate"
 	"erp-user-service/grpc/logger"
+	"erp-user-service/utils"
 	"fmt"
 	"log"
 	"net"
@@ -18,14 +18,14 @@ import (
 type UserServer struct {
 	authenticate.UnimplementedAuthenticateServiceServer
 
-	JwtUtils *utils.JwtUtilities
-	Models   *data.Models
+	Utils  *utils.AppUtilities
+	Models *data.Models
 }
 
 func (server *UserServer) Authenticate(ctx context.Context, req *authenticate.AuthenticateRequest) (*authenticate.AuthenticateResponse, error) {
 	token := req.GetToken()
 
-	claims, err := server.JwtUtils.VerifyJwt(token)
+	claims, err := server.Utils.Jwt.VerifyJwt(token)
 
 	if err != nil {
 		return &authenticate.AuthenticateResponse{
@@ -54,8 +54,8 @@ func (app *Config) startGRPC() {
 	s := grpc.NewServer()
 
 	authenticate.RegisterAuthenticateServiceServer(s, &UserServer{
-		Models:   app.Models,
-		JwtUtils: app.Utils.Jwt,
+		Models: data.New(),
+		Utils:  utils.New(),
 	})
 
 	log.Printf("grpc server started on port %s", grpcPort)
