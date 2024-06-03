@@ -22,7 +22,7 @@ func (c key) String() string {
 
 const (
 	AuthenticationMiddlewareResultKey = key("auth-result-key")
-	IpLocationMiddlewareResultKey     = key("iplocation-result-key")
+	DeviceInfoMiddlewareResultKey     = key("device-info-result-key")
 )
 
 func New() *MiddlewareConfig {

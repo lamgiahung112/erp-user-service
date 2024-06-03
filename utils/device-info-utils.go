@@ -8,15 +8,14 @@ import (
 )
 
 type DeviceInfo struct {
-	Model       string    `json:"model"`
-	OS          string    `json:"os"`
-	Browser     string    `json:"browser"`
-	IP          string    `json:"IP"`
-	Country     string    `json:"country"`
-	Region      string    `json:"region"`
-	City        string    `json:"city"`
-	LoggedInAt  time.Time `json:"loggedInAt"`
-	LoginPortal string    `json:"loginPortal"`
+	Model      string    `json:"model"`
+	OS         string    `json:"os"`
+	Browser    string    `json:"browser"`
+	IP         string    `json:"IP"`
+	Country    string    `json:"country"`
+	Region     string    `json:"region"`
+	City       string    `json:"city"`
+	LoggedInAt time.Time `json:"loggedInAt"`
 }
 
 type DeviceInfoUtilities struct {
@@ -39,13 +38,12 @@ func (u *DeviceInfoUtilities) GetDevice(userAgent string, iplocation *IpLocation
 	}
 
 	return &DeviceInfo{
-		Model:      result.Model(),
-		OS:         result.OSInfo().Name,
-		Browser:    browser,
-		IP:         iplocation.IP,
-		Country:    iplocation.Country,
-		Region:     iplocation.Region,
-		City:       iplocation.City,
-		LoggedInAt: time.Now(),
+		Model:   result.Model(),
+		OS:      result.OSInfo().Name,
+		Browser: browser,
+		IP:      iplocation.IP,
+		Country: iplocation.Country,
+		Region:  iplocation.Region,
+		City:    iplocation.City,
 	}, nil
 }

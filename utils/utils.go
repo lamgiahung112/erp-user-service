@@ -17,7 +17,6 @@ var ErrorFactory = &factory.ErrorFactory{}
 
 func New() *AppUtilities {
 	InitIpLocationUtils()
-	InitRedis()
 
 	return &AppUtilities{
 		Jwt: &JwtUtilities{
@@ -25,7 +24,7 @@ func New() *AppUtilities {
 			key:              []byte(os.Getenv("JWT_KEY")),
 		},
 		IpLocation: &IpLocationUtils{},
-		Redis:      &RedisClient{},
+		Redis:      InitRedis(),
 		DeviceInfo: &DeviceInfoUtilities{},
 	}
 }

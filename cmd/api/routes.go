@@ -20,16 +20,14 @@ func (app *Config) routes() http.Handler {
 		MaxAge:           300,
 	}))
 	mux.Use(middleware.Heartbeat("/ping"))
-	mux.Use(app.Middleware.GetIpLocation)
+	mux.Use(app.Middleware.GetDeviceInfo)
 
 	mux.Post("/", app.Handlers.CreateUser)
 	mux.Post("/login", app.Handlers.Login)
 
 	protectedRoutes := chi.NewRouter()
 	protectedRoutes.Use(app.Middleware.Authenticated)
-	protectedRoutes.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("OK"))
-	})
+	protectedRoutes.Get("/verify", app.Handlers.VerifyUser)
 
 	mux.Mount("/authentication", protectedRoutes)
 

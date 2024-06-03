@@ -71,11 +71,12 @@ func (user *JwtUsers) GetClaims() *map[string]any {
 }
 
 func (*Users) ParseFromClaims(claims *jwt.MapClaims) *JwtUsers {
-	prio, err := strconv.Atoi(fmt.Sprintf("%s", (*claims)["priority"]))
+	prio, err := strconv.Atoi(fmt.Sprintf("%v", (*claims)["priority"]))
 
 	if err != nil {
-		prio = 0 // Least priority
+		return nil
 	}
+
 	return &JwtUsers{
 		ID:       fmt.Sprintf("%s", (*claims)["userID"]),
 		Email:    fmt.Sprintf("%s", (*claims)["email"]),

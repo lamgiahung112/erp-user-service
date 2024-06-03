@@ -2,11 +2,10 @@ package middlewares
 
 import (
 	"context"
-	"log"
 	"net/http"
 )
 
-func (md *MiddlewareConfig) GetIpLocation(next http.Handler) http.Handler {
+func (md *MiddlewareConfig) GetDeviceInfo(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		IPAddress := r.Header.Get("X-Real-Ip")
 		if IPAddress == "" {
@@ -23,8 +22,14 @@ func (md *MiddlewareConfig) GetIpLocation(next http.Handler) http.Handler {
 			return
 		}
 
-		log.Println(iplocation)
-		ctx := context.WithValue(r.Context(), IpLocationMiddlewareResultKey, iplocation)
+		userAgent := r.Header.Get("user-agent")
+		deviceInfo, err := md.Utils.DeviceInfo.GetDevice(userAgent, iplocation)
+		if err != nil {
+			md.serveError(err, w, http.StatusInternalServerError)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), DeviceInfoMiddlewareResultKey, deviceInfo)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 	return http.HandlerFunc(fn)
