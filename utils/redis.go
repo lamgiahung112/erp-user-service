@@ -3,8 +3,6 @@ package utils
 import (
 	"context"
 	"encoding/json"
-	"log"
-
 	"github.com/redis/go-redis/v9"
 )
 
@@ -41,7 +39,6 @@ func (*RedisClient) GetSessionInfo(userId string, refreshToken string) (*DeviceI
 	ctx := context.Background()
 
 	getCmd := rdb.HGet(ctx, userId, refreshToken)
-	log.Println("Getting ", refreshToken)
 
 	if getCmd.Err() != nil {
 		return nil, ErrorFactory.NotFound("session data")
@@ -56,6 +53,37 @@ func (*RedisClient) GetSessionInfo(userId string, refreshToken string) (*DeviceI
 	}
 
 	return &deviceInfo, nil
+}
+
+func (*RedisClient) GetAllSessionsOfUser(userId string) ([]*DeviceInfo, error) {
+	ctx := context.Background()
+
+	getCmd := rdb.HGetAll(ctx, userId)
+
+	if getCmd.Err() != nil {
+		return nil, ErrorFactory.NotFound("session data")
+	}
+
+	var deviceInfos []*DeviceInfo
+	for _, value := range getCmd.Val() {
+		var deviceInfo DeviceInfo
+		err := json.Unmarshal([]byte(value), &deviceInfo)
+		if err != nil {
+			return nil, ErrorFactory.Malformatted("session data")
+		}
+		deviceInfos = append(deviceInfos, &deviceInfo)
+	}
+	return deviceInfos, nil
+}
+
+func (*RedisClient) RevokeAllUserSessions(userId string) error {
+	ctx := context.Background()
+	cmd := rdb.Del(ctx, userId)
+
+	if cmd.Err() != nil {
+		return ErrorFactory.Unexpected()
+	}
+	return nil
 }
 
 func (*RedisClient) RemoveSessionInfo(userID string, refreshToken string) error {

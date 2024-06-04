@@ -11,17 +11,14 @@ type JwtUtilities struct {
 	key              []byte
 }
 
-func (config *JwtUtilities) GenerateJwt(claimMap *map[string]any, refreshToken string) (string, error) {
+func (config *JwtUtilities) GenerateJwt(userID string, refreshToken string) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims := token.Claims.(jwt.MapClaims)
 
 	claims["exp"] = time.Now().Add(config.expirationPeriod).Unix()
 	claims["refresh"] = refreshToken
-
-	for cl := range *claimMap {
-		claims[cl] = (*claimMap)[cl]
-	}
+	claims["userID"] = userID
 
 	signedToken, err := token.SignedString(config.key)
 

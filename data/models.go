@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -31,10 +30,7 @@ type Users struct {
 }
 
 type JwtUsers struct {
-	ID       string `json:"id"`
-	Email    string `json:"email"`
-	Name     string `json:"name"`
-	Priority int16  `json:"priority"`
+	ID string `json:"id"`
 }
 
 const dbOpsTimeout = 3 * time.Second
@@ -54,34 +50,19 @@ func New() *Models {
 
 func (user *Users) ToJwtUser() *JwtUsers {
 	return &JwtUsers{
-		ID:       user.ID,
-		Email:    user.Email,
-		Name:     user.Name,
-		Priority: user.Priority,
+		ID: user.ID,
 	}
 }
 
 func (user *JwtUsers) GetClaims() *map[string]any {
 	return &map[string]any{
-		"userID":   user.ID,
-		"email":    user.Email,
-		"name":     user.Name,
-		"priority": user.Priority,
+		"userID": user.ID,
 	}
 }
 
 func (*Users) ParseFromClaims(claims *jwt.MapClaims) *JwtUsers {
-	prio, err := strconv.Atoi(fmt.Sprintf("%v", (*claims)["priority"]))
-
-	if err != nil {
-		return nil
-	}
-
 	return &JwtUsers{
-		ID:       fmt.Sprintf("%s", (*claims)["userID"]),
-		Email:    fmt.Sprintf("%s", (*claims)["email"]),
-		Name:     fmt.Sprintf("%s", (*claims)["name"]),
-		Priority: int16(prio),
+		ID: fmt.Sprintf("%s", (*claims)["userID"]),
 	}
 }
 
@@ -142,6 +123,38 @@ func (*Users) FindByEmail(email string) (*Users, error) {
 
 	var user Users
 	row := db.QueryRowContext(ctx, query, email)
+
+	err := row.Scan(
+		&user.ID,
+		&user.Email,
+		&user.Password,
+		&user.Name,
+		&user.AuthenticatorSecretKey,
+		&user.Is2FAEnabled,
+		&user.Priority,
+		&user.Active,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (*Users) FindByUserID(id string) (*Users, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbOpsTimeout)
+
+	defer cancel()
+
+	query := `select 
+	id,email,password,name,authenticatorsecretkey,is2faenabled,priority,active,created_at,updated_at
+	from users where id = $1`
+
+	var user Users
+	row := db.QueryRowContext(ctx, query, id)
 
 	err := row.Scan(
 		&user.ID,

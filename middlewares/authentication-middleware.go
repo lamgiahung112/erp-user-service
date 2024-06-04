@@ -25,22 +25,21 @@ func (md *MiddlewareConfig) Authenticated(next http.Handler) http.Handler {
 
 		refreshToken := fmt.Sprintf("%s", (*claims)["refresh"])
 		user := md.Models.Users.ParseFromClaims(claims)
-		if user == nil || len(refreshToken) == 0 || len(user.Email) == 0 || len(user.ID) == 0 || len(user.Name) == 0 {
+		if user == nil || len(refreshToken) == 0 || len(user.ID) == 0 {
 			md.serveError(md.ErrorFactory.InvalidCredentials(), w, http.StatusUnauthorized)
 			return
 		}
 
 		deviceInfo := r.Context().Value(DeviceInfoMiddlewareResultKey).(*utils.DeviceInfo)
 		storedDeviceInfo, err := md.Utils.Redis.GetSessionInfo(user.ID, refreshToken)
-
 		if err != nil {
 			md.serveError(err, w, http.StatusUnauthorized)
 			return
 		}
 
-		isDifferentDevice := deviceInfo.Compare(storedDeviceInfo)
+		isSameDevice := deviceInfo.Compare(storedDeviceInfo)
 
-		if isDifferentDevice {
+		if !isSameDevice {
 			md.serveError(md.ErrorFactory.NotFound("device"), w, http.StatusUnauthorized)
 			return
 		}

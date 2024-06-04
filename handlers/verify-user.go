@@ -10,6 +10,17 @@ import (
 	"github.com/google/uuid"
 )
 
+// VerifyUser verifies user provided by the value of middlewares.AuthenticationMiddlewareResultKey
+//
+// Steps:
+//  1. Parse claims from Authentication middleware to get user and refresh token
+//  2. Get device info from DeviceInfo middleware
+//  3. Get the cached device info
+//  4. Compare the cached device and current device
+//  5. Create new refresh token, new jwt
+//  6. Invalidate refresh token from Authentication middleware
+//  7. Store new refresh token along with new device info
+//  8. Send to user jwt and user data
 func (hlr *HandlerConfig) VerifyUser(w http.ResponseWriter, r *http.Request) {
 	authClaims := r.Context().Value(middlewares.AuthenticationMiddlewareResultKey).(*jwt.MapClaims)
 	user := hlr.Models.Users.ParseFromClaims(authClaims)
@@ -24,8 +35,12 @@ func (hlr *HandlerConfig) VerifyUser(w http.ResponseWriter, r *http.Request) {
 	deviceInfo.LoggedInAt = storedDeviceInfo.LoggedInAt
 
 	newRefreshToken := uuid.NewString()
-	hlr.Utils.Redis.RemoveSessionInfo(user.ID, refreshToken)
-	newJwt, err := hlr.Utils.Jwt.GenerateJwt(user.GetClaims(), newRefreshToken)
+	err = hlr.Utils.Redis.RemoveSessionInfo(user.ID, refreshToken)
+	if err != nil {
+		hlr.errorJSON(w, err)
+		return
+	}
+	newJwt, err := hlr.Utils.Jwt.GenerateJwt(user.ID, newRefreshToken)
 
 	if err != nil {
 		hlr.errorJSON(w, err)

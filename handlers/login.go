@@ -29,7 +29,7 @@ func (hlr *HandlerConfig) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	refreshToken := uuid.NewString()
-	token, err := hlr.Utils.Jwt.GenerateJwt(user.ToJwtUser().GetClaims(), refreshToken)
+	token, err := hlr.Utils.Jwt.GenerateJwt(user.ID, refreshToken)
 	if err != nil {
 		hlr.errorJSON(w, err)
 		return
