@@ -29,7 +29,7 @@ func (hlr *HandlerConfig) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	refreshToken := uuid.NewString()
-	token, err := hlr.Utils.Jwt.GenerateJwt(user.ID, refreshToken)
+	token, err := hlr.Utils.Jwt.GenerateJwt(refreshToken, user.ToJwtUser().GetClaims())
 	if err != nil {
 		hlr.errorJSON(w, err)
 		return
@@ -48,7 +48,6 @@ func (hlr *HandlerConfig) Login(w http.ResponseWriter, r *http.Request) {
 		Message: "",
 		Data: map[string]any{
 			"token": token,
-			"user":  user.ToJwtUser(),
 		},
 	}
 	hlr.writeJSON(w, http.StatusOK, resp)

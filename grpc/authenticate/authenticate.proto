@@ -5,17 +5,18 @@ package authenticate;
 option go_package = "/authenticate";
 
 message AuthenticateRequest{
-    string token = 1;
+    string credentials = 1;
 }
 
-message JwtUser{
-    string userId = 1;
+message User {
+    string id = 1;
     string email = 2;
     string name = 3;
+    string role = 4;
 }
 
 message AuthenticateResponse{
-    JwtUser user = 1;
+    User user = 1;
 }
 
 service AuthenticateService{

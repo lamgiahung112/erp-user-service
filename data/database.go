@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"math"
 	"os"
 	"time"
 
@@ -52,16 +51,25 @@ func connectDB() *sql.DB {
 
 func initAdminAccount() {
 	user := &Users{
-		Email:    "admin@tnh.com",
-		Name:     "Admin",
-		Password: "1",
-		Priority: math.MaxInt16,
+		Email:     "admin@tnh.com",
+		Name:      "Admin",
+		Password:  "1",
+		Role:      "SUPER_ADMIN",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	user.Insert(user)
 }
 
 func initTable(db *sql.DB) error {
+	createRoleSql := `
+	DO $$ 
+	BEGIN 
+		IF NOT EXISTS(SELECT 1 FROM pg_type WHERE typname = 'USER_ROLE') THEN
+			CREATE TYPE USER_ROLE AS ENUM ('SUPER_ADMIN', 'ADMIN', 'MANAGER', 'STAFF');
+		END IF;
+	END $$;`
 	// Create a table based on the Users struct
 	createTableSQL := `CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
@@ -70,13 +78,14 @@ func initTable(db *sql.DB) error {
         password TEXT,
 		authenticatorsecretkey TEXT,
 		is2faenabled BOOLEAN,
-		priority smallint NOT NULL,
+		role USER_ROLE NOT NULL,
         active BOOLEAN,
         created_at TIMESTAMP NOT NULL,
         updated_at TIMESTAMP NOT NULL
     );`
 
-	_, err := db.Exec(createTableSQL)
+	_, err := db.Exec(createRoleSql)
+	_, err = db.Exec(createTableSQL)
 	if err != nil {
 		log.Fatal(err)
 		return err

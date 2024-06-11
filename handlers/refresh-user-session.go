@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// VerifyUser verifies user provided by the value of middlewares.AuthenticationMiddlewareResultKey
+// RefreshUserSession verifies user provided by the value of middlewares.AuthenticationMiddlewareResultKey and returns a new jwt
 //
 // Steps:
 //  1. Parse claims from Authentication middleware to get user and refresh token
@@ -20,8 +20,8 @@ import (
 //  5. Create new refresh token, new jwt
 //  6. Invalidate refresh token from Authentication middleware
 //  7. Store new refresh token along with new device info
-//  8. Send to user jwt and user data
-func (hlr *HandlerConfig) VerifyUser(w http.ResponseWriter, r *http.Request) {
+//  8. Send to user the new jwt
+func (hlr *HandlerConfig) RefreshUserSession(w http.ResponseWriter, r *http.Request) {
 	authClaims := r.Context().Value(middlewares.AuthenticationMiddlewareResultKey).(*jwt.MapClaims)
 	user := hlr.Models.Users.ParseFromClaims(authClaims)
 	refreshToken := fmt.Sprintf("%s", (*authClaims)["refresh"])
@@ -40,7 +40,7 @@ func (hlr *HandlerConfig) VerifyUser(w http.ResponseWriter, r *http.Request) {
 		hlr.errorJSON(w, err)
 		return
 	}
-	newJwt, err := hlr.Utils.Jwt.GenerateJwt(user.ID, newRefreshToken)
+	newJwt, err := hlr.Utils.Jwt.GenerateJwt(newRefreshToken, user.GetClaims())
 
 	if err != nil {
 		hlr.errorJSON(w, err)
@@ -58,7 +58,6 @@ func (hlr *HandlerConfig) VerifyUser(w http.ResponseWriter, r *http.Request) {
 		Message: "",
 		Data: map[string]any{
 			"token": newJwt,
-			"user":  user,
 		},
 	}
 

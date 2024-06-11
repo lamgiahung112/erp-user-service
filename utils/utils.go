@@ -20,7 +20,7 @@ func New() *AppUtilities {
 
 	return &AppUtilities{
 		Jwt: &JwtUtilities{
-			expirationPeriod: 7 * 24 * time.Hour,
+			expirationPeriod: 5*time.Minute + 30*time.Second,
 			key:              []byte(os.Getenv("JWT_KEY")),
 		},
 		IpLocation: &IpLocationUtils{},
