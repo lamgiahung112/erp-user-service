@@ -51,12 +51,13 @@ func connectDB() *sql.DB {
 
 func initAdminAccount() {
 	user := &Users{
-		Email:     "admin@tnh.com",
-		Name:      "Admin",
-		Password:  "1",
-		Role:      "SUPER_ADMIN",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		Email:        "admin@tnh.com",
+		Name:         "Admin",
+		Password:     "1",
+		Role:         "SUPER_ADMIN",
+		Is2FAEnabled: true,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	}
 
 	user.Insert(user)

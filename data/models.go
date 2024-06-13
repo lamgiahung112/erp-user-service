@@ -78,6 +78,43 @@ func (*Users) ParseFromClaims(claims *jwt.MapClaims) *JwtUsers {
 	}
 }
 
+func (*Users) Save(user *Users) error {
+	ctx, cancel := context.WithTimeout(context.Background(), dbOpsTimeout)
+
+	defer cancel()
+	user.UpdatedAt = time.Now()
+
+	statement := `UPDATE users 
+	SET email = $2, 
+		password = $3, 
+		name = $4, 
+		authenticatorsecretkey = $5, 
+		is2faenabled = $6, 
+		role = $7, 
+		active = $8, 
+		created_at = $9, 
+		updated_at = $10
+	WHERE id = $1;`
+
+	_, err := db.ExecContext(ctx, statement,
+		&user.ID,
+		&user.Email,
+		&user.Password,
+		&user.Name,
+		&user.AuthenticatorSecretKey,
+		&user.Is2FAEnabled,
+		&user.Role,
+		&user.Active,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (*Users) Insert(user *Users) error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbOpsTimeout)
 
@@ -92,7 +129,6 @@ func (*Users) Insert(user *Users) error {
 	user.ID = newId
 	user.Active = true
 	user.Password = string(hashedPassword)
-	user.Is2FAEnabled = false
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = time.Now()
 

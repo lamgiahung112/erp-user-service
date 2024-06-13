@@ -11,6 +11,7 @@ type AppUtilities struct {
 	IpLocation *IpLocationUtils
 	Redis      *RedisClient
 	DeviceInfo *DeviceInfoUtilities
+	QR         *QRUtils
 }
 
 var ErrorFactory = &factory.ErrorFactory{}
@@ -26,5 +27,6 @@ func New() *AppUtilities {
 		IpLocation: &IpLocationUtils{},
 		Redis:      InitRedis(),
 		DeviceInfo: &DeviceInfoUtilities{},
+		QR:         &QRUtils{},
 	}
 }

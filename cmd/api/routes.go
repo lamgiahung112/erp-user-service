@@ -31,6 +31,7 @@ func (app *Config) routes() http.Handler {
 	protectedRoutes.Get("/whoami", app.Handlers.WhoAmI)
 	protectedRoutes.Get("/devices", app.Handlers.GetDeviceList)
 	protectedRoutes.Delete("/devices", app.Handlers.RevokeUserDevices)
+	protectedRoutes.Post("/thirdparty", app.Handlers.AddThirdPartyAuthenticator)
 
 	mux.Mount("/authentication", protectedRoutes)
 
