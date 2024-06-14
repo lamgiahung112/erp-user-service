@@ -24,7 +24,7 @@ func main() {
 		Handlers:   handlers.New(),
 	}
 
-	//go app.startGRPC()
+	go app.startGRPC()
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", webPort),

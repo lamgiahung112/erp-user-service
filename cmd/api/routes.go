@@ -27,9 +27,11 @@ func (app *Config) routes() http.Handler {
 
 	protectedRoutes := chi.NewRouter()
 	protectedRoutes.Use(app.Middleware.Authenticated)
-	protectedRoutes.Get("/verify", app.Handlers.VerifyUser)
+	protectedRoutes.Get("/refresh", app.Handlers.RefreshUserSession)
+	protectedRoutes.Get("/whoami", app.Handlers.WhoAmI)
 	protectedRoutes.Get("/devices", app.Handlers.GetDeviceList)
 	protectedRoutes.Delete("/devices", app.Handlers.RevokeUserDevices)
+	protectedRoutes.Post("/thirdparty", app.Handlers.AddThirdPartyAuthenticator)
 
 	mux.Mount("/authentication", protectedRoutes)
 

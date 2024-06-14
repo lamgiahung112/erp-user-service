@@ -8,6 +8,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strconv"
 )
 
 type HandlerConfig struct {
@@ -49,6 +50,13 @@ func (hlr *HandlerConfig) readJSON(w http.ResponseWriter, r *http.Request, data 
 	}
 
 	return nil
+}
+
+func (hlr *HandlerConfig) writeImage(w http.ResponseWriter, data []byte) error {
+	w.Header().Set("Content-Type", "image/jpeg")
+	w.Header().Set("Content-Length", strconv.Itoa(len(data)))
+	_, err := w.Write(data)
+	return err
 }
 
 func (hlr *HandlerConfig) writeJSON(w http.ResponseWriter, status int, data any, headers ...http.Header) error {

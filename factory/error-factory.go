@@ -26,3 +26,9 @@ func (*ErrorFactory) NotFound(target string) error {
 func (*ErrorFactory) Unexpected() error {
 	return errors.New("unexpected error")
 }
+
+func (*ErrorFactory) AlreadyExists(target string) error {
+	return fmt.Errorf("%s already exists", target)
+}
+
+func (*ErrorFactory) NotEnabled(target string) error { return fmt.Errorf("%s is not enabled", target) }

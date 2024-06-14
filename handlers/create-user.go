@@ -9,7 +9,7 @@ type CreateUserRequestPayload struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 	Name     string `json:"name"`
-	Priority int16  `json:"priority"`
+	Role     string `json:"role"`
 }
 
 func (hlr *HandlerConfig) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -26,7 +26,7 @@ func (hlr *HandlerConfig) CreateUser(w http.ResponseWriter, r *http.Request) {
 		Email:    requestPayload.Email,
 		Password: requestPayload.Password,
 		Name:     requestPayload.Name,
-		Priority: requestPayload.Priority,
+		Role:     requestPayload.Role,
 	}
 
 	err = hlr.Models.Users.Insert(newUser)
