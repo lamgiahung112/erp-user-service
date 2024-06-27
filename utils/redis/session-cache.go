@@ -1,28 +1,12 @@
-package utils
+package redis
 
 import (
 	"context"
 	"encoding/json"
-	"github.com/redis/go-redis/v9"
+	"erp-user-service/utils"
 )
 
-type RedisClient struct{}
-
-var rdb *redis.Client
-
-func InitRedis() *RedisClient {
-	if rdb == nil {
-		rdb = redis.NewClient(&redis.Options{
-			Addr:     "redis:6379",
-			Password: "redis",
-			DB:       0,
-			PoolSize: 10,
-		})
-	}
-	return &RedisClient{}
-}
-
-func (r *RedisClient) StoreSessionInfo(userID string, refreshToken string, deviceInfo *DeviceInfo) error {
+func (r *RedisClient) StoreSessionInfo(userID string, refreshToken string, deviceInfo *utils.DeviceInfo) error {
 	ctx := context.Background()
 
 	deviceInfoJson, _ := json.Marshal(deviceInfo)
@@ -30,46 +14,46 @@ func (r *RedisClient) StoreSessionInfo(userID string, refreshToken string, devic
 	cmd := rdb.HSet(ctx, userID, refreshToken, deviceInfoJson)
 
 	if cmd.Err() != nil {
-		return ErrorFactory.StoreSessionFailed()
+		return utils.ErrorFactory.StoreSessionFailed()
 	}
 	return nil
 }
 
-func (*RedisClient) GetSessionInfo(userId string, refreshToken string) (*DeviceInfo, error) {
+func (*RedisClient) GetSessionInfo(userId string, refreshToken string) (*utils.DeviceInfo, error) {
 	ctx := context.Background()
 
 	getCmd := rdb.HGet(ctx, userId, refreshToken)
 
 	if getCmd.Err() != nil {
-		return nil, ErrorFactory.NotFound("session data")
+		return nil, utils.ErrorFactory.NotFound("session data")
 	}
 
-	var deviceInfo DeviceInfo
+	var deviceInfo utils.DeviceInfo
 
 	err := json.Unmarshal([]byte(getCmd.Val()), &deviceInfo)
 
 	if err != nil {
-		return nil, ErrorFactory.Malformatted("session data")
+		return nil, utils.ErrorFactory.Malformatted("session data")
 	}
 
 	return &deviceInfo, nil
 }
 
-func (*RedisClient) GetAllSessionsOfUser(userId string) ([]*DeviceInfo, error) {
+func (*RedisClient) GetAllSessionsOfUser(userId string) ([]*utils.DeviceInfo, error) {
 	ctx := context.Background()
 
 	getCmd := rdb.HGetAll(ctx, userId)
 
 	if getCmd.Err() != nil {
-		return nil, ErrorFactory.NotFound("session data")
+		return nil, utils.ErrorFactory.NotFound("session data")
 	}
 
-	var deviceInfos []*DeviceInfo
+	var deviceInfos []*utils.DeviceInfo
 	for _, value := range getCmd.Val() {
-		var deviceInfo DeviceInfo
+		var deviceInfo utils.DeviceInfo
 		err := json.Unmarshal([]byte(value), &deviceInfo)
 		if err != nil {
-			return nil, ErrorFactory.Malformatted("session data")
+			return nil, utils.ErrorFactory.Malformatted("session data")
 		}
 		deviceInfos = append(deviceInfos, &deviceInfo)
 	}
@@ -81,7 +65,7 @@ func (*RedisClient) RevokeAllUserSessions(userId string) error {
 	cmd := rdb.Del(ctx, userId)
 
 	if cmd.Err() != nil {
-		return ErrorFactory.Unexpected()
+		return utils.ErrorFactory.Unexpected()
 	}
 	return nil
 }
@@ -91,7 +75,7 @@ func (*RedisClient) RemoveSessionInfo(userID string, refreshToken string) error 
 	err := rdb.HDel(ctx, userID, refreshToken).Err()
 
 	if err != nil {
-		return ErrorFactory.Unexpected()
+		return utils.ErrorFactory.Unexpected()
 	}
 	return nil
 }
