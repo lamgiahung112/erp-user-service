@@ -24,6 +24,7 @@ func (app *Config) routes() http.Handler {
 
 	mux.Post("/", app.Handlers.CreateUser)
 	mux.Post("/login", app.Handlers.Login)
+	mux.Post("/login/email", app.Handlers.LoginViaEmailOtp)
 
 	protectedRoutes := chi.NewRouter()
 	protectedRoutes.Use(app.Middleware.Authenticated)
