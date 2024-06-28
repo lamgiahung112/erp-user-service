@@ -19,6 +19,8 @@ func (*ErrorFactory) StoreSessionFailed() error {
 	return errors.New("failed to store session data")
 }
 
+func (*ErrorFactory) TimeOut(target string) error { return fmt.Errorf("%s timeout", target) }
+
 func (*ErrorFactory) NotFound(target string) error {
 	return fmt.Errorf("%s not found", target)
 }
